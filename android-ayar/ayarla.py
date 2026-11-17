@@ -14,6 +14,9 @@ man = 'android/app/src/main/AndroidManifest.xml'
 s = oku(man)
 if 'screenOrientation' not in s:
     s = s.replace('<activity', '<activity\n            android:screenOrientation="sensorLandscape"', 1)
+# reklam kimligi izni (Android 13+ icin Play sarti)
+if 'permission.AD_ID' not in s:
+    s = s.replace('<application', '<uses-permission android:name="com.google.android.gms.permission.AD_ID" />\n\n    <application', 1)
 if 'gms.ads.APPLICATION_ID' not in s:
     s = s.replace('</application>', '    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="@string/admob_app_id" />\n    </application>', 1)
 yaz(man, s)
