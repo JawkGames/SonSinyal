@@ -63,4 +63,49 @@ if os.path.exists(vg):
     v = re.sub(r'compileSdkVersion\s*=\s*\d+', 'compileSdkVersion = 36', v)
     v = re.sub(r'targetSdkVersion\s*=\s*\d+', 'targetSdkVersion = 36', v)
     yaz(vg, v)
+# 5) Gercek tam ekran (immersive): saat/pil cubugu ve gezinme cubugu gizli, kaydirinca gecici gorunur
+paket = 'com.jawk.sonsinyal'
+ma = 'android/app/src/main/java/' + paket.replace('.', '/') + '/MainActivity.java'
+yaz(ma, """package """ + paket + """;
+
+import android.os.Bundle;
+import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        tamEkran();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        tamEkran();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) tamEkran();
+    }
+
+    private void tamEkran() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
+        WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        c.hide(WindowInsetsCompat.Type.systemBars());
+        c.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+    }
+}
+""")
 print('ayarlandi', kod, ad)

@@ -1,4 +1,4 @@
-# Son Sinyal - oyun notlari (v0.23)
+# Son Sinyal - oyun notlari (v0.24)
 
 ## Hikaye
 Insanligin kayboldugu bir dunya. Son yapay zeka ajani, yari insansi bir robot govdesinde bir insan ariyor.
@@ -286,3 +286,4 @@ Oyun kodu `game.js` sonundaki `ek2*` fonksiyonlarinda (`ek2Guncelle`, `ek2Once2`
 - Uygulama acilis reklami `ca-app-pub-7983529419004158/4096537889`: acilista ve arka plandan donuste (iki gosterim arasi en az 30 sn).
 - AB icin izin formu (UMP) acilista gerekirse gosterilir.
 - Ustteki 1-10 bolum dugmeleri ve tam ekran dugmesi kaldirildi (uygulama zaten tam ekran).
+- Gercek tam ekran (v0.24): `MainActivity` (CI `ayarla.py` yazar) saat/pil ve gezinme cubugunu gizler (immersive, kaydirinca gecici gorunur), centik alanini da kaplar, ekran kapanmaz. Reklamdan / arka plandan donunce yeniden uygulanir.
