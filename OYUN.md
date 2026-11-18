@@ -1,4 +1,4 @@
-# Son Sinyal - oyun notlari (v0.25)
+# Son Sinyal - oyun notlari (v0.26)
 
 ## Hikaye
 Insanligin kayboldugu bir dunya. Son yapay zeka ajani, yari insansi bir robot govdesinde bir insan ariyor.
@@ -288,3 +288,9 @@ Oyun kodu `game.js` sonundaki `ek2*` fonksiyonlarinda (`ek2Guncelle`, `ek2Once2`
 - Ustteki 1-10 bolum dugmeleri ve tam ekran dugmesi kaldirildi (uygulama zaten tam ekran).
 - Gercek tam ekran (v0.24): `MainActivity` (CI `ayarla.py` yazar) saat/pil ve gezinme cubugunu gizler (immersive, kaydirinca gecici gorunur), centik alanini da kaplar, ekran kapanmaz. Reklamdan / arka plandan donunce yeniden uygulanir.
 - Manifest `com.google.android.gms.permission.AD_ID` izni (v0.25, Play: Android 13+ reklam kimligi sarti).
+
+## Performans (v0.26)
+- Telefonda (dokunmatik / Android uygulamasi) cizim olcegi: `devicePixelRatio` en fazla 1.25 (PC'de 2).
+- Uyarlanir cozunurluk (`PRF`): ortalama kare suresi > 21 ms ise olcek %12 duser (en az %55), < 13.5 ms 8 sn surerse %8 yukselir.
+- `isin()` artik her cagrida yeni gradyan uretmez: renk basina bir kez 256 px parlama gorseli, guc `globalAlpha` ile (gorunum ayni).
+- Telefonda gorsel puruzsuzlestirme `low`, film greni (overlay) cizilmez.

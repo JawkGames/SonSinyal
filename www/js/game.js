@@ -8,6 +8,11 @@
   const ctx = cv.getContext('2d');
   const H = CFG.H;
   let W = 1280, rs = 1;
+  // performans: telefonda daha dusuk cizim olcegi; kare suresi uzarsa olcek kendiliginden duser
+  const MOBIL = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+    ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+  const PRF = { kalite: 1, ort: 16, sure: 0, iyi: 0 };
+  const PURUZ = MOBIL ? 'low' : 'high';
   let G, gx, maske, mx, gok, vinyet;
   const MS = 1 / 3;   // isik maskesi olcegi
 
@@ -67,8 +72,8 @@
     if (ch > ih) { ch = ih; cw = ih * oran; }
     cv.style.width = Math.round(cw) + 'px';
     cv.style.height = Math.round(ch) + 'px';
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    rs = clamp(ch * dpr / H, 0.6, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, MOBIL ? 1.25 : 2);
+    rs = clamp(ch * dpr * PRF.kalite / H, 0.5, 2);
     cv.width = Math.round(W * rs); cv.height = Math.round(H * rs);
     G = tuvalYap(cv.width, cv.height); gx = G.getContext('2d');
     maske = tuvalYap(W * MS, H * MS); mx = maske.getContext('2d');
@@ -785,13 +790,28 @@
     c.globalAlpha = 1;
   }
 
-  function isin(c, x, y, r, renk, guc) {
-    const g = c.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, 'rgba(' + renk + ',' + guc + ')');
-    g.addColorStop(0.35, 'rgba(' + renk + ',' + guc * 0.42 + ')');
+  // isik lekesi: renk basina bir kez uretilen yuvarlak gradyan gorseli, gucu globalAlpha ile (ayni gorunum, cok daha hizli)
+  let isinOn = {}, isinSay = 0;
+  function isinSp(renk) {
+    let sp = isinOn[renk];
+    if (sp) return sp;
+    if (++isinSay > 160) { isinOn = {}; isinSay = 1; }
+    const N = 256;
+    sp = document.createElement('canvas'); sp.width = sp.height = N;
+    const c = sp.getContext('2d'), g = c.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N / 2);
+    g.addColorStop(0, 'rgba(' + renk + ',1)');
+    g.addColorStop(0.35, 'rgba(' + renk + ',0.42)');
     g.addColorStop(1, 'rgba(' + renk + ',0)');
-    c.fillStyle = g;
-    c.fillRect(x - r, y - r, r * 2, r * 2);
+    c.fillStyle = g; c.fillRect(0, 0, N, N);
+    isinOn[renk] = sp;
+    return sp;
+  }
+  function isin(c, x, y, r, renk, guc) {
+    if (!(guc > 0.004) || !(r > 0)) return;
+    const a = c.globalAlpha;
+    c.globalAlpha = a * Math.min(1, guc);
+    c.drawImage(isinSp(renk), x - r, y - r, r * 2, r * 2);
+    c.globalAlpha = a;
   }
 
   function katmanCiz(k) {
@@ -1365,7 +1385,7 @@
     cam.y += sk;
     ctx.setTransform(rs, 0, 0, rs, 0, 0);
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = PURUZ;
 
     // --- gok ve arka katmanlar (odada yok) ---
     if (icerde) { ctx.fillStyle = '#020405'; ctx.fillRect(0, 0, W, H); }
@@ -1428,7 +1448,7 @@
     // --- oyun katmani ---
     gx.setTransform(1, 0, 0, 1, 0, 0);
     gx.globalCompositeOperation = 'source-over'; gx.globalAlpha = 1;
-    gx.imageSmoothingEnabled = true; gx.imageSmoothingQuality = 'high';
+    gx.imageSmoothingEnabled = true; gx.imageSmoothingQuality = PURUZ;
     gx.clearRect(0, 0, G.width, G.height);
     gx.setTransform(rs, 0, 0, rs, -cam.x * rs, -cam.y * rs);
     nesneCiz();
@@ -1727,9 +1747,11 @@
       ekranCiz(px, py, pw, ph, a);
     }
 
+    if (!MOBIL) {      // film greni: overlay karisimi telefonda cok pahali
     ctx.globalAlpha = 0.055; ctx.globalCompositeOperation = 'overlay';
     const gk2 = Sanat.s.gren, ox2 = (Math.random() * 192) | 0, oy2 = (Math.random() * 192) | 0;
     for (let y = -oy2; y < H; y += 192 * 2) for (let x = -ox2; x < W; x += 192 * 2) ctx.drawImage(gk2, x, y, 384, 384);
+    }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
     if (karart > 0.003) { ctx.fillStyle = 'rgba(0,0,0,' + clamp(karart, 0, 1) + ')'; ctx.fillRect(0, 0, W, H); }
@@ -2958,9 +2980,20 @@
   }
 
   let sonT = 0;
+  // kare suresi uzun kalirsa cizim olcegini kademeli dusurur (en az %55), uzun sure rahatsa geri yukseltir
+  function performans(ham) {
+    if (!(ham > 0) || ham > 0.25 || document.hidden) return;
+    PRF.ort += (ham * 1000 - PRF.ort) * 0.05; PRF.sure += ham;
+    if (PRF.sure < 1.5) return;
+    if (PRF.ort > 21 && PRF.kalite > 0.55) { PRF.kalite = Math.max(0.55, PRF.kalite - 0.12); PRF.sure = 0; PRF.iyi = 0; boyutla(); }
+    else if (PRF.ort < 13.5 && PRF.kalite < 1) { PRF.iyi += ham; if (PRF.iyi > 8) { PRF.kalite = Math.min(1, PRF.kalite + 0.08); PRF.sure = 0; PRF.iyi = 0; boyutla(); } }
+    else PRF.iyi = 0;
+  }
   function dongu(t) {
-    const dt = Math.min(0.034, sonT ? (t - sonT) / 1000 : 0.016);
+    const ham = sonT ? (t - sonT) / 1000 : 0;
+    const dt = Math.min(0.034, sonT ? ham : 0.016);
     sonT = t;
+    performans(ham);
     guncelle(dt);
     ciz();
     if (prm.has('dbg')) document.title = durum + ' t=' + dZaman.toFixed(2) + ' k=' + karart.toFixed(2) + ' x=' + robot.x.toFixed(0) + ' y=' + robot.y.toFixed(0) + ' kal=' + robot.kalcaY.toFixed(0) + ' cam=' + cam.x.toFixed(0) + ',' + cam.y.toFixed(0);
