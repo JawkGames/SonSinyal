@@ -1,4 +1,4 @@
-# Son Sinyal - oyun notlari (v0.26)
+# Son Sinyal - oyun notlari (v0.27)
 
 ## Hikaye
 Insanligin kayboldugu bir dunya. Son yapay zeka ajani, yari insansi bir robot govdesinde bir insan ariyor.
@@ -294,3 +294,12 @@ Oyun kodu `game.js` sonundaki `ek2*` fonksiyonlarinda (`ek2Guncelle`, `ek2Once2`
 - Uyarlanir cozunurluk (`PRF`): ortalama kare suresi > 21 ms ise olcek %12 duser (en az %55), < 13.5 ms 8 sn surerse %8 yukselir.
 - `isin()` artik her cagrida yeni gradyan uretmez: renk basina bir kez 256 px parlama gorseli, guc `globalAlpha` ile (gorunum ayni).
 - Telefonda gorsel puruzsuzlestirme `low`, film greni (overlay) cizilmez.
+
+## Android / Play kurallari (her oyunda uygulanir)
+Bu hatalar bir kez yasandi; AAB uretirken `android-ayar/ayarla.py` bunlari hep onlemeli:
+1. **Zorunlu donanim ozelligi hatasi** ("android.hardware.screen.landscape ... uygulamanin kullanilabilirligini kisitliyor"): manifest'te yatay ekran (`screen.landscape`), kamera (`camera`, `camera.front`, `camera.autofocus`), `touchscreen`, `microphone` icin `<uses-feature ... android:required="false" />` eklenir. Portre oyunda `screen.portrait` da `required=false` olur. Hicbir donanim ozelligi zorunlu birakilmaz.
+2. **Reklam kimligi (Android 13+)**: reklam varsa manifest'e `com.google.android.gms.permission.AD_ID` eklenir; Play Console'da "reklam kimligi kullaniyor: Evet / Reklam veya pazarlama" beyani yapilir.
+3. **minSdk 24**, targetSdk / compileSdk 36 (Play otomatik koruma ve guncel hedef).
+4. **Gercek tam ekran (immersive)**: durum + gezinme cubugu gizli; tam ekran dugmesi Android surumunde yok.
+5. AAB gercek anahtarla imzalanir (`KEYSTORE_*` secret'lari); `gecici` imzali AAB Play'e yuklenmez.
+6. Reklam birimleri gercek ID olmali; test ID'siyle AAB verilmez.

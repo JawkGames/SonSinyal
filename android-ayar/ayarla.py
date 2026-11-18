@@ -14,6 +14,12 @@ man = 'android/app/src/main/AndroidManifest.xml'
 s = oku(man)
 if 'screenOrientation' not in s:
     s = s.replace('<activity', '<activity\n            android:screenOrientation="sensorLandscape"', 1)
+# donanim ozellikleri ZORUNLU olmasin (Play: "zorunlu donanim ozelligi beyanlari kullanilabilirligi kisitliyor")
+# yatay ekran, kamera ve dokunmatik cihazlarin bir kismi tarafindan "yok" sayilir; hepsi required=false
+for ozellik in ['android.hardware.screen.landscape', 'android.hardware.camera', 'android.hardware.camera.front',
+                'android.hardware.camera.autofocus', 'android.hardware.touchscreen', 'android.hardware.microphone']:
+    if 'name="' + ozellik + '"' not in s:
+        s = s.replace('<application', '<uses-feature android:name="' + ozellik + '" android:required="false" />\n\n    <application', 1)
 # reklam kimligi izni (Android 13+ icin Play sarti)
 if 'permission.AD_ID' not in s:
     s = s.replace('<application', '<uses-permission android:name="com.google.android.gms.permission.AD_ID" />\n\n    <application', 1)

@@ -28,3 +28,4 @@ Oyun `www/` altinda; bagimliligi yok (saf Canvas 2D). Test: `www/index.html`.
   (`ekGuncelle`, `ekCiz`, `ekIsik`, `ekMaske`, `kancaGuncelle`), 6-10. bolumunki `ek2*` fonksiyonlarinda; gorselleri `art.js` `_parca` ile uretilir.
   Kol / bacak gibi uzuvlar duz cizgiyle degil `uzuv(...)` dokulu parcasiyla cizilir.
 - `www/assets/` icine konan fotograflar kodla cizilenlerin yerine gecer (bkz. OYUN.md).
+- Android (AAB) kurallari: `OYUN.md` -> "Android / Play kurallari" bolumu; AAB'den once hepsi (zorunlu donanim ozelligi olmamasi dahil) saglanir.
