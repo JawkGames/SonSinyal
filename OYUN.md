@@ -1,4 +1,4 @@
-# Son Sinyal - oyun notlari (v0.28)
+# Son Sinyal - oyun notlari (v0.29)
 
 ## Hikaye
 Insanligin kayboldugu bir dunya. Son yapay zeka ajani, yari insansi bir robot govdesinde bir insan ariyor.
@@ -304,3 +304,10 @@ Bu hatalar bir kez yasandi; AAB uretirken `android-ayar/ayarla.py` bunlari hep o
 4. **Gercek tam ekran (immersive)**: durum + gezinme cubugu gizli; tam ekran dugmesi Android surumunde yok.
 5. AAB gercek anahtarla imzalanir (`KEYSTORE_*` secret'lari); `gecici` imzali AAB Play'e yuklenmez.
 6. Reklam birimleri gercek ID olmali; test ID'siyle AAB verilmez.
+
+## Performans 2, kayit, durdurma (v0.29)
+- Olcum (telefon benzetimi, 4x yavas islemci): kare basina ekran boyama ~13 ekrandan ~5.5 ekrana indi; ortalama kare 67 ms -> 40 ms.
+- Telefonda arka plan (gok, 3 uzak katman, sis bantlari, sis) ayri `arka` tuvaline **yarim cozunurlukte, iki karede bir** cizilir, tek `drawImage` ile basilir. PC'de eskisi gibi.
+- En dusuk cozunurlukte (%55) bile ort. kare > 24 ms ise sabit **30 fps** moduna gecer (`PRF.yari`).
+- **Kayit** (`localStorage` `sonSinyal.kayit.v1`): bolum, son kontrol noktasi, yapilmis etkilesimler (sureli / ac-kapa / kasa kapisi haric), vurulmus nisanlar, tasinan nesne. Kontrol noktasi gecilince, bolum yuklenince, durdurunca ve uygulama arka plana gidince kaydedilir. Acilista kayittan devam edilir; bolumun yapisi degismisse (etkilesim / nisan sayisi, bolum uzunlugu) o bolumun basindan baslar.
+- **Durdurma**: sag ustte II dugmesi (klavye: Esc / P). Menu: DEVAM, BOLUMU BASTAN. Uygulama arka plana gidince oyun kendiliginden durur, sesler susar (`SES.duraklat / devam`).

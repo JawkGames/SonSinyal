@@ -1,6 +1,7 @@
 # Son Sinyal (repo: MaryoWorld) - calisma kurallari
 
-Karanlik, atmosferik 2D platform oyunu (Inside tarzi). Mobil (yatay) hedefli, PC'de de test edilir.
+Karanlik, atmosferik 2D platform oyunu (Inside tarzi). Bu bir **telefon uygulamasidir** (son urun Google Play AAB + telefona kurulan APK, yatay);
+web/tarayici surumu yalnizca test icindir. Kod her zaman telefonda uygulama olarak calisacak sekilde yazilir; performans telefona gore olculur.
 Oyun `www/` altinda; bagimliligi yok (saf Canvas 2D). Test: `www/index.html`.
 
 ## Kurallar
@@ -10,7 +11,8 @@ Oyun `www/` altinda; bagimliligi yok (saf Canvas 2D). Test: `www/index.html`.
 - Repoya baska yapay zekalar da gonderiyor: gondermeden once `git pull --rebase` yapilir, cakismada iki taraf da korunur.
   Force push yapilmaz, gecmis silinmez.
 - Oyun bilgileri (olculer, bolum yapisi, kurallar) `OYUN.md` icinde tutulur; degisince guncellenir.
-- Dokunmatik dugmeler PC'de de gorunur kalir (tam ekran ve bolum dugmeleri v0.23'te kaldirildi).
+- Dokunmatik dugmeler PC'de de gorunur kalir (tam ekran ve bolum dugmeleri v0.23'te kaldirildi). Sag ustte durdurma dugmesi var.
+- Kayit / durdurma / telefon performansi kurallari: `OYUN.md` (v0.26 ve v0.29 bolumleri). Yeni bolum/etkilesim eklenince kayit dizinleri degisir; bu normaldir (o bolum bastan acilir).
 - Cizim kurali: duz ve parlak yuzey birakilmaz; her yeni gorselin ustunden `Sanat._eskit` (pas, toz, gren) gecilir.
   Gorseller `tuvalQ` ile yuksek cozunurlukte uretilir, `lw` / `lh` mantiksal olcusuyle basilir.
 - Oyun cevre etkilesimi + bulmaca agirliklidir; robotun aradigi insan oyuncudur (bkz. OYUN.md, bitis sahnesi).

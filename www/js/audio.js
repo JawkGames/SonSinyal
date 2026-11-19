@@ -110,5 +110,14 @@ const SES = (function () {
     if (htmlYagmur) { if (gizli) htmlYagmur.pause(); else htmlYagmur.play().catch(() => {}); }
   });
 
-  return { AYAR: AYAR, FX: FX, baslat: baslat, cal: cal };
+  // oyun durunca / uygulama arka plana gidince sesler susar
+  function duraklat() {
+    if (ctx && ctx.state === 'running') ctx.suspend();
+    if (htmlYagmur) htmlYagmur.pause();
+  }
+  function devam() {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    if (htmlYagmur) htmlYagmur.play().catch(() => {});
+  }
+  return { AYAR: AYAR, FX: FX, baslat: baslat, cal: cal, duraklat: duraklat, devam: devam };
 })();

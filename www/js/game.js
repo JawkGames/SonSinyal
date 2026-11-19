@@ -5,7 +5,8 @@
   const cv = document.getElementById('oyun');
   const sahne = document.getElementById('sahne');
   const dEtk = document.getElementById('dEtk');
-  const ctx = cv.getContext('2d');
+  const ctxAna = cv.getContext('2d');
+  let ctx = ctxAna;
   const H = CFG.H;
   let W = 1280, rs = 1;
   // performans: telefonda daha dusuk cizim olcegi; kare suresi uzarsa olcek kendiliginden duser
@@ -13,6 +14,10 @@
     ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
   const PRF = { kalite: 1, ort: 16, sure: 0, iyi: 0 };
   const PURUZ = MOBIL ? 'low' : 'high';
+  // telefonda arka plan (gok, uzak katmanlar, sis) yarim cozunurluklu ayri tuvale, iki karede bir cizilir
+  let arka = null, ax = null, arkaSay = 0;
+  let duraklat = false;                                    // oyun durdurma
+  const KAYIT = 'sonSinyal.kayit.v1';                     // kaldigin yer (bolum + kontrol noktasi + yapilanlar)
   let G, gx, maske, mx, gok, vinyet;
   const MS = 1 / 3;   // isik maskesi olcegi
 
@@ -77,6 +82,7 @@
     cv.width = Math.round(W * rs); cv.height = Math.round(H * rs);
     G = tuvalYap(cv.width, cv.height); gx = G.getContext('2d');
     maske = tuvalYap(W * MS, H * MS); mx = maske.getContext('2d');
+    if (MOBIL) { arka = tuvalYap(Math.max(2, Math.round(W * rs * 0.5)), Math.max(2, Math.round(H * rs * 0.5))); ax = arka.getContext('2d'); arkaSay = 0; }
     gok = Sanat.gokYap(W, H);
     vinyet = Sanat.vinyetYap(W, H);
     if (B) kameraSinir();
@@ -193,7 +199,7 @@
         const t0 = performance.now();
         while (performance.now() - t0 < 14) {
           if (adimlar.next().done) {
-            boyutla(); bolumYukle(1); bitti = true;
+            boyutla(); const kyt = kayitOku(); bolumYukle(kyt ? kyt.b : 1); if (kyt) { kayitUygula(kyt); kaydet(); } bitti = true;
             window.addEventListener('resize', boyutla);
             window.addEventListener('orientationchange', () => setTimeout(boyutla, 120));
             document.addEventListener('fullscreenchange', () => setTimeout(boyutla, 120));
@@ -249,6 +255,73 @@
     }
   }
 
+  // ---------- kayit: uygulama kapanip acilinca kaldigin yerden ----------
+  function kaydet() {
+    if (!B || durum === 'final' || durum === 'yukleniyor' || icerde) return;
+    try {
+      const e = [], n = [];
+      B.etkiler.forEach((x, i) => { if (x.yapildi && !x.sure && !x.cevir && !x.kapi) e.push(i); });
+      (B.nisanlar || []).forEach((x, i) => { if (x.yapildi && !x.cevir) n.push(i); });
+      localStorage.setItem(KAYIT, JSON.stringify({ b: bolumNo, k: kontrolX, e: e, n: n, t: tasinan || null,
+        ne: B.etkiler.length, nn: (B.nisanlar || []).length, s: B.oyunSonX }));
+    } catch (er) { /* depolama yok */ }
+  }
+  function kayitOku() {
+    try {
+      const k = JSON.parse(localStorage.getItem(KAYIT) || 'null');
+      if (k && k.b >= 1 && k.b <= BOLUM_HAZIR) return k;
+    } catch (er) { /* bozuk kayit */ }
+    return null;
+  }
+  // bolum yuklendikten sonra: kontrol noktasina koy, onceden yapilanlari sessizce yeniden uygula
+  function kayitUygula(k) {
+    if (k.ne !== B.etkiler.length || k.nn !== (B.nisanlar || []).length || k.s !== B.oyunSonX) return;   // bolum degismis: bolum basindan
+    if (k.k <= B.baslaX && !k.e.length) return;                                                          // daha baslamamis: normal acilis
+    for (const i of k.e) {
+      const e = B.etkiler[i]; if (!e) continue;
+      e.yapildi = true; e.t = 9;
+      if (yet[e.verir] !== undefined) yet[e.verir] = true;
+      for (const h of e.hedef) { h.kapali = true; h.kalici = true; }
+      if (e.ac) for (const h of e.ac) h.kapali = false;
+    }
+    for (const i of k.n) {
+      const n = B.nisanlar[i]; if (!n) continue;
+      n.yapildi = true; n.t = 9;
+      for (const h of n.hedef) { h.kapali = true; h.kalici = true; }
+      for (const h of n.ac) h.kapali = false;
+      if (n.asili) n.asili.durum = 1;
+      if (n.grup && n.grup.every((g) => g.yapildi)) for (const h of n.grupAc) h.kapali = false;
+    }
+    tasinan = k.t || null;
+    kontrolX = k.k;
+    for (const d of B.dusunceler) if (d.x < kontrolX + 60) d.oldu = true;
+    robot.sifirla(kontrolX); robot.cokme = 0; robot.kilit = false;
+    tehlikeSifirla(false);
+    durum = 'oyun'; dZaman = 0; karart = 1; acT = 0; girisT = 99;
+    cam.x = clamp(robot.x - W * 0.42, camMin, camMax); cam.y = robot.y - H * 0.70;
+  }
+
+  // ---------- durdurma ----------
+  const durakEl = document.getElementById('durak');
+  function durakla(v) {
+    if (v === duraklat || durum === 'yukleniyor') return;
+    duraklat = v;
+    if (durakEl) durakEl.classList.toggle('acik', v);
+    for (const k in dok) dok[k] = false;
+    for (const k in tus) tus[k] = false;
+    if (typeof SES !== 'undefined') { if (v && SES.duraklat) SES.duraklat(); else if (!v && SES.devam) SES.devam(); }
+    if (v) kaydet();
+  }
+  const dDur = document.getElementById('dDur');
+  if (dDur) dDur.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); durakla(!duraklat); });
+  const dDevam = document.getElementById('dDevam');
+  if (dDevam) dDevam.addEventListener('pointerdown', (e) => { e.preventDefault(); durakla(false); });
+  const dBasa = document.getElementById('dBasa');
+  if (dBasa) dBasa.addEventListener('pointerdown', (e) => { e.preventDefault(); durakla(false); bolumYukle(bolumNo); kaydet(); });
+  // uygulama arka plana gidince: durdur + kaydet
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { kaydet(); durakla(true); } });
+  window.addEventListener('pagehide', kaydet);
+
   function yenidenBasla() {
     kameraKapat();
     icerde = false; kameraSinir();
@@ -273,6 +346,8 @@
 
   // ---------- girdi ----------
   window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' || e.code === 'KeyP') { durakla(!duraklat); e.preventDefault(); return; }
+    if (duraklat) return;
     tus[e.code] = true;
     if (['Space', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].indexOf(e.code) >= 0) e.preventDefault();
     if (durum === 'final' && F.faz === 5 && F.t > 7) yenidenBasla();
@@ -709,7 +784,7 @@
 
     if (durum === 'oyun') {
       // kontrol noktasi
-      if (robot.yerde) for (const k of B.kontrol) if (robot.x >= k.x && k.x > kontrolX) kontrolX = k.x;
+      if (robot.yerde) for (const k of B.kontrol) if (robot.x >= k.x && k.x > kontrolX) { kontrolX = k.x; kaydet(); }
       if (robot.olu) geriAl('dustu');
     }
 
@@ -1388,7 +1463,16 @@
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = PURUZ;
 
     // --- gok ve arka katmanlar (odada yok) ---
-    if (icerde) { ctx.fillStyle = '#020405'; ctx.fillRect(0, 0, W, H); }
+    // telefonda: yarim cozunurluklu ayri tuvale, iki karede bir (uzak ve sisli oldugu icin fark edilmez)
+    const arkaYeni = !arka || icerde || (arkaSay++ & 1) === 0;
+    if (arka && !icerde) {
+      ctx = ax;
+      ctx.setTransform(rs * 0.5, 0, 0, rs * 0.5, 0, 0);
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'low';
+    }
+    if (!arkaYeni) { /* onceki karenin arka plani kullanilir */ }
+    else if (icerde) { ctx.fillStyle = '#020405'; ctx.fillRect(0, 0, W, H); }
     else if (B.tema.ic) icArka();
     else {
       if (Sanat.foto.uzak) {
@@ -1410,6 +1494,11 @@
       const t3 = H * katman[2].taban - cam.y * katman[2].py;
       sisBandi(t3, 230, '40,62,74', 0.5);
       sisCiz(ctx, -zaman * 14 + cam.x * 0.5, t3 - 210, 1.15, 0.42);
+    }
+    if (arka && !icerde) {
+      ctx = ctxAna;
+      ctx.setTransform(rs, 0, 0, rs, 0, 0);
+      ctx.drawImage(arka, 0, 0, W, H);
     }
 
     const L = isiklariTopla();
@@ -1821,6 +1910,7 @@
     for (const o of B.nesneler) if (o.tip === 'lamba') o.guc = 1;
     yenidenBasla();
     bolumDugmeleri();
+    kaydet();
   }
   // ustteki 1-5 dugmeleri: hazir bolume aninda gecer
   function bolumDugmeleri() {
@@ -2985,15 +3075,22 @@
     if (!(ham > 0) || ham > 0.25 || document.hidden) return;
     PRF.ort += (ham * 1000 - PRF.ort) * 0.05; PRF.sure += ham;
     if (PRF.sure < 1.5) return;
+    if (MOBIL && !PRF.yari && PRF.kalite <= 0.55 && PRF.ort > 24) { PRF.yari = true; PRF.sure = 0; return; }
+    if (PRF.yari) return;
     if (PRF.ort > 21 && PRF.kalite > 0.55) { PRF.kalite = Math.max(0.55, PRF.kalite - 0.12); PRF.sure = 0; PRF.iyi = 0; boyutla(); }
     else if (PRF.ort < 13.5 && PRF.kalite < 1) { PRF.iyi += ham; if (PRF.iyi > 8) { PRF.kalite = Math.min(1, PRF.kalite + 0.08); PRF.sure = 0; PRF.iyi = 0; boyutla(); } }
     else PRF.iyi = 0;
   }
+  let atla = false, birikim = 0;
   function dongu(t) {
+    if (duraklat) { sonT = t; birikim = 0; requestAnimationFrame(dongu); return; }
     const ham = sonT ? (t - sonT) / 1000 : 0;
-    const dt = Math.min(0.034, sonT ? ham : 0.016);
     sonT = t;
-    performans(ham);
+    // en dusuk cozunurlukte bile yetismiyorsa: sabit 30 fps (titrek 40'tan daha akici)
+    if (PRF.yari && (atla = !atla)) { birikim += ham; requestAnimationFrame(dongu); return; }
+    const gercek = ham + birikim; birikim = 0;
+    const dt = Math.min(0.034, gercek > 0 ? gercek : 0.016);
+    performans(gercek);
     guncelle(dt);
     ciz();
     if (prm.has('dbg')) document.title = durum + ' t=' + dZaman.toFixed(2) + ' k=' + karart.toFixed(2) + ' x=' + robot.x.toFixed(0) + ' y=' + robot.y.toFixed(0) + ' kal=' + robot.kalcaY.toFixed(0) + ' cam=' + cam.x.toFixed(0) + ',' + cam.y.toFixed(0);
