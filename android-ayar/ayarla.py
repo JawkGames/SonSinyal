@@ -117,4 +117,30 @@ public class MainActivity extends BridgeActivity {
     }
 }
 """)
+# 6) Optimizasyon: R8 kod kucultme + kaynak kucultme (Capacitor / AdMob siniflari korunur)
+gr = 'android/app/build.gradle'
+g = oku(gr)
+g = re.sub(r'minifyEnabled\s+false', 'minifyEnabled true\n            shrinkResources true', g, 1)
+yaz(gr, g)
+kur = 'android/app/proguard-rules.pro'
+k = oku(kur) if os.path.exists(kur) else ''
+if 'Son Sinyal koruma' not in k:
+    k += """
+# --- Son Sinyal koruma kurallari ---
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,JavascriptInterface,SourceFile,LineNumberTable
+-keep class com.getcapacitor.** { *; }
+-keep @com.getcapacitor.annotation.CapacitorPlugin public class * { *; }
+-keepclassmembers class * {
+    @com.getcapacitor.annotation.PluginMethod public <methods>;
+    @com.getcapacitor.PluginMethod public <methods>;
+    @android.webkit.JavascriptInterface <methods>;
+}
+-keep class com.getcapacitor.community.admob.** { *; }
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.android.ump.** { *; }
+-keep class com.jawk.sonsinyal.** { *; }
+-dontwarn com.google.android.gms.**
+-dontwarn com.getcapacitor.**
+"""
+    yaz(kur, k)
 print('ayarlandi', kod, ad)

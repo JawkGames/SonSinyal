@@ -1,4 +1,4 @@
-# Son Sinyal - oyun notlari (v0.29)
+# Son Sinyal - oyun notlari (v0.30)
 
 ## Hikaye
 Insanligin kayboldugu bir dunya. Son yapay zeka ajani, yari insansi bir robot govdesinde bir insan ariyor.
@@ -304,6 +304,10 @@ Bu hatalar bir kez yasandi; AAB uretirken `android-ayar/ayarla.py` bunlari hep o
 4. **Gercek tam ekran (immersive)**: durum + gezinme cubugu gizli; tam ekran dugmesi Android surumunde yok.
 5. AAB gercek anahtarla imzalanir (`KEYSTORE_*` secret'lari); `gecici` imzali AAB Play'e yuklenmez.
 6. Reklam birimleri gercek ID olmali; test ID'siyle AAB verilmez.
+7. **Optimizasyon**: release'de R8 kod kucultme (`minifyEnabled true`) + kaynak kucultme (`shrinkResources true`); Capacitor, AdMob, UMP ve uygulama paketi `proguard-rules.pro` ile korunur. `mapping.txt` AAB ile birlikte Releases'e konur.
+8. **Kenar boslugu yok**: oyun her telefonu tamamen kaplar (`CFG.minOran` 1.3 .. `maxOran` 2.6; immersive + centik alani).
+9. **AAB zipsiz** verilir: GitHub Releases'teki tek `.aab` dosyasi (Artifacts zip'tir, verilmez).
+10. **AAB adimi**: once sorun kontrolu (test reklam, eksik ID, gecici imza, zorunlu donanim...). Sorun varsa AAB uretilmez; en uste buyuk "⚠ DIKKAT!!!" ile sorunlar yazilir ve onay beklenir, onaysiz duzeltilmez. Sorun yoksa: tam ekran dugmesi ve PC/tarayiciya ozel seyler uygulamada olmaz, optimizasyon uygulanir, AAB verilir.
 
 ## Performans 2, kayit, durdurma (v0.29)
 - Olcum (telefon benzetimi, 4x yavas islemci): kare basina ekran boyama ~13 ekrandan ~5.5 ekrana indi; ortalama kare 67 ms -> 40 ms.

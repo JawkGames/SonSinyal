@@ -1,13 +1,13 @@
 // Son Sinyal - ayarlar. Her degisiklikte surum artirilir.
 'use strict';
 const CFG = {
-  surum: 'v0.29',
+  surum: 'v0.30',
   oyunAdi: 'SON SİNYAL',
 
   // Ekran (mantiksal cozunurluk; yukseklik sabit, genislik orana gore)
   H: 720,
-  minOran: 1.5,
-  maxOran: 2.34,
+  minOran: 1.3,
+  maxOran: 2.6,
 
   // Karakter fizigi
   yuruHiz: 215,        // px/sn

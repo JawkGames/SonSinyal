@@ -71,4 +71,6 @@ jobs:
           AD="son-sinyal-${SURUM_AD}-${IMZA}.aab"
           cp android/app/build/outputs/bundle/release/app-release.aab "$AD"
           TAG="aab-${SURUM_AD}-${{ github.run_number }}"
-          gh release create "$TAG" "$AD" --title "Son Sinyal ${SURUM_AD} (AAB)" --notes "Play Console'a yuklenecek AAB (zipsiz). Imza: ${IMZA}" --prerelease
+          MAP=android/app/build/outputs/mapping/release/mapping.txt
+          EK=""; if [ -f "$MAP" ]; then cp "$MAP" "son-sinyal-${SURUM_AD}-mapping.txt"; EK="son-sinyal-${SURUM_AD}-mapping.txt"; fi
+          gh release create "$TAG" "$AD" $EK --title "Son Sinyal ${SURUM_AD} (AAB)" --notes "Play Console'a yuklenecek AAB (zipsiz). Imza: ${IMZA}" --prerelease
